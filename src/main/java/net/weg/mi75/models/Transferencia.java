@@ -8,9 +8,13 @@ import java.sql.Timestamp;
 @NoArgsConstructor // Construtor sem parâmetros
 @Data // Data para criar todos os gets e sets e tbm um toString padrão
 public class Transferencia {
+    @NonNull
     private int remetente;
+    @NonNull
     private int destinatario;
+    @NonNull
     private double valor;
+    @NonNull
     private Timestamp data;
 
     @Override

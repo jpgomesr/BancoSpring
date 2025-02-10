@@ -8,7 +8,9 @@ import lombok.*;
 public class Cliente {
     private int id;
     private Conta conta;
+    @NonNull
     private String nome;
+    @NonNull
     private String cpf;
 
     @Override

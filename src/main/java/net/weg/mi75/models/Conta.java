@@ -7,9 +7,13 @@ import net.weg.mi75.exceptions.*;
 @NoArgsConstructor // Construtor sem parâmetros
 @Data // Data para criar todos os gets e sets e tbm um toString padrão
 public class Conta {
+    @ToString.Exclude // Tira número do toString padrão
     private int numero;
+    @ToString.Include // Por padrão vem ativo, mostra a variável abaixo no toString padrão
+    @NonNull // Por padrão vem desativado, mas @NonNull avisa para o RequiredArgsConstructor que precisa dessa variável
     private Cliente titular;
     private double saldo;
+    @NonNull
     private double limite;
 
     public void saque(double valor)
