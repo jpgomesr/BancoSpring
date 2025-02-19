@@ -1,4 +1,4 @@
-package net.weg.mi75.controllers;
+package net.weg.mi75.controller;
 
 public class ClienteController {
 }
