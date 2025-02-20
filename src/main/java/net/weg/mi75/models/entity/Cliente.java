@@ -8,6 +8,7 @@ import lombok.*;
 @Data // Data para criar todos os gets e sets e tbm um toString padrão
 @Entity
 @Table(name = "tb_cliente")
+@Builder
 public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
