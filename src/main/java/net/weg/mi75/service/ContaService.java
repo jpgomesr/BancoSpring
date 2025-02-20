@@ -38,7 +38,7 @@ public class ContaService {
 
     public ResponseEntity<Conta> getConta(Integer id) {
         try {
-            return new ResponseEntity<>(repository.findById(id).get(), HttpStatus.OK);
+            return new ResponseEntity<>(repository.findById(id).get(), HttpStatus.FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
