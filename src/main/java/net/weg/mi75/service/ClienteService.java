@@ -1,44 +1,66 @@
 package net.weg.mi75.service;
 
-import net.weg.mi75.models.dto.ClienteDTO;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.AllArgsConstructor;
+import net.weg.mi75.models.dto.ClientePostRequestDTO;
+import net.weg.mi75.models.dto.ClientePutRequestDTO;
 import net.weg.mi75.models.entity.Cliente;
+import net.weg.mi75.models.entity.Conta;
+import net.weg.mi75.models.exceptions.MesmoTitularException;
 import net.weg.mi75.repository.ClienteRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.NoSuchElementException;
 
+@Service
+@AllArgsConstructor
 public class ClienteService {
-    ClienteRepository repository;
+    private final ClienteRepository repository;
+    private final ContaService contaService;
 
-    public ResponseEntity<Map<String, String>> addCliente(ClienteDTO clienteDTO) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            Cliente clienteSave = repository.save(clienteDTO.convert());
-            response.put("message", "Conta criada com sucesso!");
-            response.put("conta", clienteSave.toString());
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
-        } catch (Exception e) {
-            response.put("error", "Erro ao criar conta!");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+
+    public Cliente addCliente(@Valid ClientePostRequestDTO clienteDto) {
+        Cliente cliente = clienteDto.convert();
+        return repository.save(cliente);
     }
 
-    public ResponseEntity<Cliente> getCliente(Integer id) {
-        try {
-            return new ResponseEntity<>(repository.findById(id).get(), HttpStatus.FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+    public Cliente editCliente(@NotNull @Positive Integer id, @Valid ClientePutRequestDTO clienteDto) {
+        if (!repository.existsById(id)) {
+            throw new NoSuchElementException();
         }
+        Cliente cliente = clienteDto.convert();
+        cliente.setId(id);
+        return repository.save(cliente);
     }
 
-    public ResponseEntity<List<Cliente>> getAllClientes() {
-        try {
-            return new ResponseEntity<>(repository.findAll(), HttpStatus.FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+    public Cliente changeContas(@NotNull @Positive Integer id, @NotNull @Positive Integer idConta) {
+        Cliente cliente = repository.findById(id).get();
+        Conta conta = contaService.getConta(idConta);
+        if (cliente.getContas().contains(conta)) {
+            cliente.rmConta(conta);
+        } else if (conta.getTitular() == null) {
+            cliente.addConta(conta);
+        } else {
+            throw new MesmoTitularException();
         }
+        return repository.save(cliente);
+    }
+
+    public Cliente getClienteById(@NotNull @Positive Integer id) {
+        return repository.findById(id).orElseThrow(() -> {
+            throw new NoSuchElementException("Nenhuma conta encontrada!");
+        });
+    }
+
+    public Page<Cliente> getClientes(Pageable pageable) {
+        return repository.findAll(pageable);
+    }
+
+    public void deleteCliente(@NotNull @Positive Integer id) {
+        repository.delete(repository.findById(id).get());
     }
 }

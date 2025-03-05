@@ -2,7 +2,10 @@ package net.weg.mi75.models.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import net.weg.mi75.exceptions.*;
+import net.weg.mi75.models.dto.ClienteContaGetResponseDTO;
+import net.weg.mi75.models.dto.ContaClienteResponseDTO;
+import net.weg.mi75.models.dto.ContaGetResponseDTO;
+import net.weg.mi75.models.dto.ContaResponseDTO;
 
 @AllArgsConstructor // Construtor com todos os parâmetros (TA INUTIL AQ, PQ TUDO TEM NONNULL)
 @NoArgsConstructor // Construtor sem parâmetros
@@ -13,27 +16,22 @@ import net.weg.mi75.exceptions.*;
 public class Conta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Fala que o atributo é auto increment
-    @ToString.Exclude // Tira número do toString padrão
-    @NonNull // Por padrão vem desativado, mas @NonNull avisa para o RequiredArgsConstructor que precisa dessa variável
     private Integer id;
     @Column(nullable = false, unique = true)
-    @NonNull
     private Integer numero;
-    @ToString.Include // Por padrão vem ativo, mostra a variável abaixo no toString padrão
-    @Column(nullable = false)
-    @NonNull
-    private String titular;
-    @NonNull
-    private Double saldo;
+    @ManyToOne
+    private Cliente titular;
+    @Builder.Default
+    private Double saldo = 0.0;
     @NonNull
     private Double limite;
 
-    @Override
-    public String toString() {
-        return "\nConta: " + numero +
-                "\nTitular: " + titular +
-                "\nSaldo: " + saldo +
-                "\nLimite: " + limite +
-                "\n";
+    public ContaClienteResponseDTO convertToContaClienteResponseDTO() {
+        return new ContaClienteResponseDTO(this.id, this.saldo, this.limite, this.numero);
+    }
+
+    public ContaResponseDTO convertToContaResponseDTO() {
+        ClienteContaGetResponseDTO titular = this.titular.convertClienteContaGetResponseDTO();
+        return new ContaResponseDTO(this.id, this.numero, this.saldo, this.limite, titular);
     }
 }
