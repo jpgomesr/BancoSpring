@@ -23,7 +23,6 @@ public class Conta {
     private Cliente titular;
     @Builder.Default
     private Double saldo = 0.0;
-    @NonNull
     private Double limite;
 
     public ContaClienteResponseDTO convertToContaClienteResponseDTO() {

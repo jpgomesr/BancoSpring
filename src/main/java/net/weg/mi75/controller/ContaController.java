@@ -26,8 +26,9 @@ public class ContaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Conta addConta(@RequestBody @Valid ContaPostRequestDTO contaDto) {
-        return service.addConta(contaDto);
+    public ContaResponseDTO addConta(@RequestBody @Valid ContaPostRequestDTO contaDto) {
+        Conta conta = service.addConta(contaDto);
+        return conta.convertToContaResponseDTO();
     }
 
     @GetMapping("/{id}")

@@ -7,13 +7,13 @@ import net.weg.mi75.models.entity.Cliente;
 import net.weg.mi75.models.entity.Conta;
 
 public record ContaPostRequestDTO(
-        @NotNull
-        Cliente titular,
+        @NotNull @Positive
+        Integer idTitular,
         @PositiveOrZero @NotNull
         Double limite,
         @Positive @NotNull
         Integer numero) {
-    public Conta convert() {
-        return Conta.builder().numero(numero).limite(limite).titular(titular).build();
+    public Conta convert(Cliente cliente) {
+        return Conta.builder().numero(numero).limite(limite).titular(cliente).build();
     }
 }

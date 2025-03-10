@@ -1,18 +1,18 @@
 package net.weg.mi75.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import lombok.AllArgsConstructor;
-import net.weg.mi75.models.dto.ClientePostRequestDTO;
-import net.weg.mi75.models.dto.ClientePutRequestDTO;
-import net.weg.mi75.models.entity.Cliente;
-import net.weg.mi75.models.entity.Conta;
+import jakarta.validation.constraints.*;
+import lombok.*;
+import net.weg.mi75.models.dto.*;
+import net.weg.mi75.models.entity.*;
 import net.weg.mi75.models.exceptions.MesmoTitularException;
 import net.weg.mi75.repository.ClienteRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 
@@ -21,32 +21,43 @@ import java.util.NoSuchElementException;
 public class ClienteService {
     private final ClienteRepository repository;
     private final ContaService contaService;
+    private final ModelMapper modelMapper;
 
+    @PersistenceContext
+    private final EntityManager entityManager;
 
     public Cliente addCliente(@Valid ClientePostRequestDTO clienteDto) {
         Cliente cliente = clienteDto.convert();
         return repository.save(cliente);
     }
 
-    public Cliente editCliente(@NotNull @Positive Integer id, @Valid ClientePutRequestDTO clienteDto) {
-        if (!repository.existsById(id)) {
-            throw new NoSuchElementException();
+    public Cliente editCliente(@NotNull @Positive Integer id,
+                               @Valid ClientePutRequestDTO clienteDto) {
+        if (repository.existsById(id)) {
+            Cliente clienteAtual = getClienteById(id);
+            Cliente clienteEditado = clienteDto.convert();
+            clienteEditado.setContas(clienteAtual.getContas());
+            modelMapper.map(clienteEditado, clienteAtual);
+            return repository.save(clienteAtual);
         }
-        Cliente cliente = clienteDto.convert();
-        cliente.setId(id);
-        return repository.save(cliente);
+        throw new NoSuchElementException();
     }
 
+    @Transactional
     public Cliente changeContas(@NotNull @Positive Integer id, @NotNull @Positive Integer idConta) {
-        Cliente cliente = repository.findById(id).get();
+        Cliente cliente = repository.findById(id).orElseThrow(NoSuchElementException::new);
         Conta conta = contaService.getConta(idConta);
         if (cliente.getContas().contains(conta)) {
             cliente.rmConta(conta);
+            conta.setTitular(null);
         } else if (conta.getTitular() == null) {
             cliente.addConta(conta);
+            conta.setTitular(cliente);
         } else {
             throw new MesmoTitularException();
         }
+        entityManager.flush();
+        contaService.save(conta);
         return repository.save(cliente);
     }
 

@@ -16,13 +16,12 @@ import java.util.*;
 @Entity
 @Table(name = "tb_cliente")
 @Builder
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @NonNull
     private String nome;
-    @NonNull
     private Long cpf;
     //    @ManyToMany
 //    @JoinTable(
@@ -31,16 +30,9 @@ public class Cliente {
 //            inverseJoinColumns = @JoinColumn(name = "conta_id")
 //    )
 //    private List<Conta> contas;
-    @OneToMany(mappedBy = "titular", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "titular", cascade = CascadeType.ALL)
     @Nullable
-    private List<Conta> contas;
-
-    public List<Conta> getContas() {
-        if (contas != null) {
-            return Collections.unmodifiableList(contas);
-        }
-        return new ArrayList<>();
-    }
+    private List<Conta> contas = new ArrayList<>();
 
     public void addConta(@NotNull Conta conta) {
         if (this.contas.contains(conta)) {
@@ -50,7 +42,10 @@ public class Cliente {
     }
 
     public void rmConta(@NotNull Conta conta) {
-        this.contas.remove(conta);
+        if (this.contas.contains(conta)) {
+            this.contas.remove(conta);
+            conta.setTitular(null);
+        }
     }
 
     public ClienteContaGetResponseDTO convertClienteContaGetResponseDTO() {

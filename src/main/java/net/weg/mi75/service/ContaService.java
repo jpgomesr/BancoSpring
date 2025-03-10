@@ -1,11 +1,12 @@
 package net.weg.mi75.service;
 
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import net.weg.mi75.models.dto.ContaPostRequestDTO;
-import net.weg.mi75.models.dto.ContaPutRequestDTO;
-import net.weg.mi75.models.entity.Conta;
+import lombok.*;
+import net.weg.mi75.models.dto.*;
+import net.weg.mi75.models.entity.*;
 import net.weg.mi75.repository.ContaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,12 +16,17 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ContaService {
+    @NonNull
     private final ContaRepository repository;
+    @Autowired
+    @Lazy
+    private ClienteService clienteService;
 
     public Conta addConta(@Valid ContaPostRequestDTO contaDTO) {
-        Conta conta = contaDTO.convert();
+        Cliente cliente = clienteService.getClienteById(contaDTO.idTitular());
+        Conta conta = contaDTO.convert(cliente);
         return repository.save(conta);
     }
 
@@ -44,14 +50,19 @@ public class ContaService {
     }
 
     public Conta updateConta(Integer id, ContaPutRequestDTO contaDto) {
-        Conta conta = contaDto.convert();
-        conta.setId(id);
-        return repository.save(conta);
+        Conta contaAntiga = getConta(id);
+        contaAntiga.setNumero(contaDto.numero());
+        contaAntiga.setLimite(contaDto.limite());
+        return repository.save(contaAntiga);
     }
 
     public Conta changeLimite(Integer id, Double limite) {
         Conta conta = getConta(id);
         conta.setLimite(limite);
         return repository.save(conta);
+    }
+
+    public void save(Conta conta) {
+        repository.save(conta);
     }
 }
